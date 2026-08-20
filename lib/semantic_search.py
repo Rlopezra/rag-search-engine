@@ -3,6 +3,7 @@ import numpy as np
 import json
 import os
 import numpy as np
+import re
 
 def cosine_similarity(vec1: np.ndarray, vec2: np.ndarray) -> float:
     dot_product = np.dot(vec1, vec2)
@@ -64,6 +65,40 @@ def search_movies(query, limit=5):
 class SemanticSearch:
     def __init__(self):
         self.model = SentenceTransformer("all-MiniLM-L6-v2")
+
+def chunk_text(text, n, overlap):
+    text_split = text.split()
+    step = n-overlap
+    grouped = [' '.join(text_split[i : i + n]) for i in range(0, len(text_split), step)]
+
+    return grouped
+
+def sem_chunk_text(text, n, overlap):
+    step = n - overlap
+    chunks = []
+    start = 0
+    while start < len(text):
+        end = start + n
+        chunks.append(' '.join(text[start:end]))
+        if end >= len(text):
+            break
+        start += step
+    return chunks
+
+def chunk_text_print_format(text, result):
+    print(f"Chunking {len(text)} characters")
+    for i, r in enumerate(result, start=1):
+        print(f"{i}. {r}")
+
+def sem_chunk_text_print_format(text, result):
+    print(f"Semantically chunking {len(text)} characters")
+    for i, r in enumerate(result, start=1):
+        print(f"{i}. {r}")
+
+
+class SemanticSearch:
+    def __init__(self, model_name: str = "all-MiniLM-L6-v2"):
+        self.model = SentenceTransformer(model_name)
         self.embeddings = None
         self.documents = None
         self.document_map = {}

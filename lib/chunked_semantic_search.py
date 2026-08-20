@@ -28,20 +28,28 @@ class ChunkedSemanticSearch(SemanticSearch):
 
             if not doc.get("description") or not doc["description"].strip():
                 continue
-
-            sem_split = re.split(r"(?<=[.!?])\s+", doc.get("description").strip())
-            chunk_text = sem_chunk_text(sem_split, 4, 1)
+            
+            strip_text = doc.get("description").strip()
+            if len(strip_text) == 0:
+                return []
+            sem_split = re.split(r"(?<=[.!?])\s+", strip_text)
+            if len(sem_split) == 1 and not sentences[0].endswith(('.', '!', '?')):
+                chunk_text = sem_split
+            else:
+                chunk_text = sem_chunk_text(sem_split, 4, 1)
             total_chunks = len(chunk_text)
 
             movie_idx = index
 
             for chu_index, chunk in enumerate(chunk_text):
-                chunk_list.append(chunk)
-                chunk_meta.append({
-                    "movie_idx": movie_idx,
-                    "chunk_idx": chu_index,
-                    "total_chunks": total_chunks
-                })
+                strip_chunk = chunk.strip()
+                if strip_chunk:
+                    chunk_list.append(strip_chunk)
+                    chunk_meta.append({
+                        "movie_idx": movie_idx,
+                        "chunk_idx": chu_index,
+                        "total_chunks": total_chunks
+                    })
         
         self.chunk_embeddings = self.model.encode(chunk_list, show_progress_bar=True)
         self.chunk_metadata = chunk_meta
